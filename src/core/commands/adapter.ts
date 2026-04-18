@@ -38,7 +38,8 @@ export default class CommandTreeAdapter {
   private adapt(command: RunnableCommand, name: string): RegistryCommand {
     return {
       getFullName: () => name,
-      execute: (interaction: ChatInputCommandInteraction) => command.execute(interaction),
+      getOptions: () => command.getOptions(),
+      execute: (interaction: ChatInputCommandInteraction, options: Record<string, any>) => command.execute(interaction, options),
     };
   }
 }

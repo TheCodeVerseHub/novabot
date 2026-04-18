@@ -1,7 +1,9 @@
 import { ChatInputCommandInteraction } from "discord.js";
+import { CommandOption, OptionType, OptionTypeMap } from "./arguments";
 
 interface RunnableCommand {
-  execute(interaction: ChatInputCommandInteraction): Promise<void>;
+  execute(interaction: ChatInputCommandInteraction, options: Record<string, any>): Promise<void>;
+  getOptions(): CommandOption<OptionType>[];
 }
 
 abstract class CommandNode {
@@ -22,20 +24,36 @@ abstract class CommandNode {
   }
 }
 
-abstract class RootCommand extends CommandNode implements RunnableCommand {
-  abstract execute(interaction: ChatInputCommandInteraction): Promise<void>;
+abstract class LeafCommandNode extends CommandNode implements RunnableCommand {
+  private readonly options: CommandOption<OptionType>[] = [];
+
+  protected addOption<T extends OptionType>(
+    name: string,
+    description: string,
+    type: T,
+    required: boolean,
+    defaultValue?: OptionTypeMap[T]
+  ) {
+    this.options.push({ name, description, type, required, defaultValue });
+  }
+
+  public getOptions(): CommandOption<OptionType>[] {
+    return this.options;
+  }
+
+  abstract execute(interaction: ChatInputCommandInteraction, options: Record<string, any>): Promise<void>;
 }
 
-abstract class SubCommand extends CommandNode implements RunnableCommand {
-  abstract execute(interaction: ChatInputCommandInteraction): Promise<void>;
-}
+abstract class RootCommand extends LeafCommandNode {}
+
+abstract class SubCommand extends LeafCommandNode {}
 
 class SubCommandGroup extends CommandNode {
   private readonly subCommands: SubCommand[];
 
   public constructor(name: string, description: string, subCommands?: SubCommand[]) {
     super(name, description);
-    this.subCommands = subCommands??[];
+    this.subCommands = subCommands ?? [];
   }
 
   public getSubCommands(): readonly SubCommand[] {
@@ -58,8 +76,8 @@ class RootCommandGroup extends CommandNode {
     subCommandGroups?: SubCommandGroup[]
   ) {
     super(name, description);
-    this.subCommands = subCommands??[];
-    this.subCommandGroups = subCommandGroups??[];
+    this.subCommands = subCommands ?? [];
+    this.subCommandGroups = subCommandGroups ?? [];
   }
 
   public getSubCommands(): readonly SubCommand[] {

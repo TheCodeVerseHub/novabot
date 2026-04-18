@@ -1,4 +1,4 @@
-import type { RunnableCommand, CommandNode } from "./tree";
+import type { RunnableCommand, CommandNode, SubCommand } from "./tree";
 import { RootCommand, RootCommandGroup } from "./tree";
 import CommandRegistry from "./registry";
 import CommandTreeAdapter from "./adapter";
@@ -9,6 +9,7 @@ import {
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder,
 } from "discord.js";
+import { OptionType } from "./arguments";
 
 export default class CommandService {
   private readonly registry: CommandRegistry;
@@ -32,32 +33,53 @@ export default class CommandService {
   public collectSlashCommands(): RESTPostAPIChatInputApplicationCommandsJSONBody[] {
     const array = [];
     for (const root of this.roots) {
-      const builder = new SlashCommandBuilder();
-      builder.setName(root.getName());
-      builder.setDescription(root.getDescription());
       if (root instanceof RootCommandGroup) {
+        const builder = new SlashCommandBuilder();
+        builder.setName(root.getName());
+        builder.setDescription(root.getDescription());
         for (const group of root.getSubCommandGroups()) {
           const groupBuilder = new SlashCommandSubcommandGroupBuilder();
           groupBuilder.setName(group.getName());
           groupBuilder.setDescription(group.getDescription());
           for (const command of group.getSubCommands()) {
             const commandBuilder = new SlashCommandSubcommandBuilder();
-            commandBuilder.setName(command.getName());
-            commandBuilder.setDescription(command.getDescription());
-            groupBuilder.addSubcommand(commandBuilder);
+            groupBuilder.addSubcommand(this.collectLeaf(command) as SlashCommandSubcommandBuilder);
           }
           builder.addSubcommandGroup(groupBuilder);
         }
         for (const command of root.getSubCommands()) {
           const commandBuilder = new SlashCommandSubcommandBuilder();
-          commandBuilder.setName(command.getName());
-          commandBuilder.setDescription(command.getDescription());
-          builder.addSubcommand(commandBuilder);
+          builder.addSubcommand(this.collectLeaf(command) as SlashCommandSubcommandBuilder);
         }
+        array.push(builder);
+      } else {
+        array.push(this.collectLeaf(root) as SlashCommandBuilder);
       }
-      array.push(builder);
     }
     return array.map((builder) => builder.toJSON());
+  }
+
+  private collectLeaf(command: SubCommand | RootCommand): SlashCommandBuilder | SlashCommandSubcommandBuilder {
+    const builder: SlashCommandBuilder | SlashCommandSubcommandBuilder =
+      command instanceof RootCommand ? new SlashCommandBuilder() : new SlashCommandSubcommandBuilder();
+    builder.setName(command.getName());
+    builder.setDescription(command.getDescription());
+    for (const option of command.getOptions()) {
+      // TODO: Autocomplete flag on Option
+      switch (option.type) {
+        case OptionType.String:
+          builder.addStringOption((optionBuilder) =>
+            optionBuilder
+              .setName(option.name)
+              .setDescription(option.description)
+              .setRequired(option.required)
+              .setAutocomplete(false)
+          );
+          break;
+        // TODO: Other option types
+      }
+    }
+    return builder;
   }
 
   public registerCommands(tree: RootCommand | RootCommandGroup): void {
