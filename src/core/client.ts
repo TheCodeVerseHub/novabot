@@ -52,10 +52,11 @@ export default class BotClient {
     const commands = this.commandService.collectSlashCommands();
     const rest = new REST().setToken(this.configuration.token);
     try {
-      const data = await rest.put(
-        Routes.applicationGuildCommands(this.configuration.client_id, this.configuration.guild_id),
-        { body: commands }
-      );
+      const route =
+        this.configuration.guild_id === "0" || this.configuration.guild_id === ""
+          ? Routes.applicationCommands(this.configuration.client_id)
+          : Routes.applicationGuildCommands(this.configuration.client_id, this.configuration.guild_id);
+      const data = await rest.put(route, { body: commands });
       // TODO: Logging
       console.log(`Successfully reloaded ${commands.length} application (/) commands.`);
     } catch (error) {
