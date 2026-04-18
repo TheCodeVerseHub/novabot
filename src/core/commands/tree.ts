@@ -1,9 +1,11 @@
 import { ChatInputCommandInteraction } from "discord.js";
-import { CommandOption, OptionType, OptionTypeMap } from "./arguments";
+import { CommandOption, OptionType, ResolveOptions } from "./arguments";
 
-interface RunnableCommand {
+export type CommandProps = readonly CommandOption<OptionType>[];
+
+interface RunnableCommand<TOptions extends CommandProps = []> {
   execute(interaction: ChatInputCommandInteraction, options: Record<string, any>): Promise<void>;
-  getOptions(): CommandOption<OptionType>[];
+  getOptions(): TOptions;
 }
 
 abstract class CommandNode {
@@ -24,55 +26,53 @@ abstract class CommandNode {
   }
 }
 
-abstract class LeafCommandNode extends CommandNode implements RunnableCommand {
-  private readonly options: CommandOption<OptionType>[] = [];
+abstract class LeafCommandNode<TOptions extends CommandProps = []>
+  extends CommandNode
+  implements RunnableCommand<TOptions>
+{
+  private readonly options: TOptions;
 
-  protected addOption<T extends OptionType>(
-    name: string,
-    description: string,
-    type: T,
-    required: boolean,
-    defaultValue?: OptionTypeMap[T]
-  ) {
-    this.options.push({ name, description, type, required, defaultValue });
+  public constructor(name: string, description: string, options: TOptions) {
+    super(name, description);
+    this.options = options;
   }
 
-  public getOptions(): CommandOption<OptionType>[] {
+  public getOptions(): TOptions {
     return this.options;
   }
 
-  abstract execute(interaction: ChatInputCommandInteraction, options: Record<string, any>): Promise<void>;
+  abstract execute(interaction: ChatInputCommandInteraction, options: ResolveOptions<TOptions>): Promise<void>;
 }
 
-abstract class RootCommand extends LeafCommandNode {}
+abstract class RootCommand<TOptions extends CommandProps> extends LeafCommandNode<TOptions> {}
 
-abstract class SubCommand extends LeafCommandNode {}
+abstract class SubCommand<TOptions extends CommandProps> extends LeafCommandNode<TOptions> {}
 
 class SubCommandGroup extends CommandNode {
-  private readonly subCommands: SubCommand[];
+  private readonly subCommands: SubCommand<CommandProps>[];
 
-  public constructor(name: string, description: string, subCommands?: SubCommand[]) {
+  public constructor(name: string, description: string, subCommands?: SubCommand<CommandProps>[]) {
     super(name, description);
     this.subCommands = subCommands ?? [];
   }
 
-  public getSubCommands(): readonly SubCommand[] {
-    return this.subCommands as readonly SubCommand[];
+  public getSubCommands(): readonly SubCommand<CommandProps>[] {
+    return this.subCommands as readonly SubCommand<CommandProps>[];
   }
 
-  public addSubCommand(command: SubCommand): void {
+  public addSubCommand(command: SubCommand<CommandProps>): void {
     this.subCommands.push(command);
   }
 }
 
 class RootCommandGroup extends CommandNode {
-  private readonly subCommands: SubCommand[];
+  private readonly subCommands: SubCommand<CommandProps>[];
   private readonly subCommandGroups: SubCommandGroup[];
 
   public constructor(
     name: string,
     description: string,
-    subCommands?: SubCommand[],
+    subCommands?: SubCommand<CommandProps>[],
     subCommandGroups?: SubCommandGroup[]
   ) {
     super(name, description);
@@ -80,15 +80,15 @@ class RootCommandGroup extends CommandNode {
     this.subCommandGroups = subCommandGroups ?? [];
   }
 
-  public getSubCommands(): readonly SubCommand[] {
-    return this.subCommands as readonly SubCommand[];
+  public getSubCommands(): readonly SubCommand<CommandProps>[] {
+    return this.subCommands as readonly SubCommand<CommandProps>[];
   }
 
   public getSubCommandGroups(): readonly SubCommandGroup[] {
     return this.subCommandGroups as readonly SubCommandGroup[];
   }
 
-  public addSubCommand(command: SubCommand): void {
+  public addSubCommand(command: SubCommand<CommandProps>): void {
     this.subCommands.push(command);
   }
 

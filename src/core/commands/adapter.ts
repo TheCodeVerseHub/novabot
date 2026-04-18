@@ -1,4 +1,4 @@
-import { RootCommand, type RootCommandGroup, type RunnableCommand } from "./tree";
+import { RootCommand, type RootCommandGroup, type RunnableCommand, type CommandProps } from "./tree";
 import { type RegistryCommand } from "./registry";
 import { type ChatInputCommandInteraction } from "discord.js";
 
@@ -9,7 +9,7 @@ export default class CommandTreeAdapter {
    * @param root The root of the command tree.
    * @returns A map of the full name of the commands to the commands themselves.
    */
-  public collectCommands(root: RootCommand | RootCommandGroup): Map<string, RegistryCommand> {
+  public collectCommands(root: RootCommand<CommandProps> | RootCommandGroup): Map<string, RegistryCommand> {
     const map = new Map<string, RegistryCommand>();
 
     if (root instanceof RootCommand) {
@@ -35,7 +35,8 @@ export default class CommandTreeAdapter {
     return map;
   }
 
-  private adapt(command: RunnableCommand, name: string): RegistryCommand {
+  // For some reason, we need to take any otherwise we get a type error
+  private adapt(command: RunnableCommand<any>, name: string): RegistryCommand {
     return {
       getFullName: () => name,
       getOptions: () => command.getOptions(),

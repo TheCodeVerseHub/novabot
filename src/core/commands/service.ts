@@ -1,4 +1,4 @@
-import type { RunnableCommand, CommandNode, SubCommand } from "./tree";
+import type { RunnableCommand, CommandNode, SubCommand, CommandProps } from "./tree";
 import { RootCommand, RootCommandGroup } from "./tree";
 import CommandRegistry from "./registry";
 import CommandTreeAdapter from "./adapter";
@@ -9,14 +9,26 @@ import {
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder,
 } from "discord.js";
-import { OptionType } from "./arguments";
+import { CommandOption, OptionType } from "./arguments";
+
+const optionAppliers = {
+  [OptionType.String]: "addStringOption",
+  [OptionType.Integer]: "addIntegerOption",
+  [OptionType.Number]: "addNumberOption",
+  [OptionType.Boolean]: "addBooleanOption",
+  [OptionType.User]: "addUserOption",
+  [OptionType.Channel]: "addChannelOption",
+  [OptionType.Role]: "addRoleOption",
+  [OptionType.Mentionable]: "addMentionableOption",
+  [OptionType.Attachment]: "addAttachmentOption",
+} as const;
 
 export default class CommandService {
   private readonly registry: CommandRegistry;
   private readonly adapter: CommandTreeAdapter;
   private readonly handler: CommandHandler;
 
-  private readonly roots: (RootCommand | RootCommandGroup)[];
+  private readonly roots: (RootCommand<CommandProps> | RootCommandGroup)[];
 
   public constructor() {
     this.registry = new CommandRegistry();
@@ -59,30 +71,30 @@ export default class CommandService {
     return array.map((builder) => builder.toJSON());
   }
 
-  private collectLeaf(command: SubCommand | RootCommand): SlashCommandBuilder | SlashCommandSubcommandBuilder {
-    const builder: SlashCommandBuilder | SlashCommandSubcommandBuilder =
-      command instanceof RootCommand ? new SlashCommandBuilder() : new SlashCommandSubcommandBuilder();
-    builder.setName(command.getName());
-    builder.setDescription(command.getDescription());
+  private collectLeaf(
+    command: SubCommand<CommandProps> | RootCommand<CommandProps>
+  ): SlashCommandBuilder | SlashCommandSubcommandBuilder {
+    const builder = command instanceof RootCommand ? new SlashCommandBuilder() : new SlashCommandSubcommandBuilder();
+
+    builder.setName(command.getName()).setDescription(command.getDescription());
+
     for (const option of command.getOptions()) {
-      // TODO: Autocomplete flag on Option
-      switch (option.type) {
-        case OptionType.String:
-          builder.addStringOption((optionBuilder) =>
-            optionBuilder
-              .setName(option.name)
-              .setDescription(option.description)
-              .setRequired(option.required)
-              .setAutocomplete(false)
-          );
-          break;
-        // TODO: Other option types
-      }
+      this.applyOption(builder, option);
     }
+
     return builder;
   }
 
-  public registerCommands(tree: RootCommand | RootCommandGroup): void {
+  private applyOption(builder: SlashCommandBuilder | SlashCommandSubcommandBuilder, option: CommandOption<OptionType>) {
+    const method = optionAppliers[option.type];
+
+    // Yes, it uses any. You don't get to judge me.
+    (builder as any)[method]((b: any) =>
+      b.setName(option.name).setDescription(option.description).setRequired(option.required)
+    );
+  }
+
+  public registerCommands(tree: RootCommand<CommandProps> | RootCommandGroup): void {
     this.roots.push(tree);
     const commands = this.adapter.collectCommands(tree);
     for (const command of commands.values()) {
@@ -90,7 +102,7 @@ export default class CommandService {
     }
   }
 
-  public unregisterCommands(tree: RootCommand | RootCommandGroup): void {
+  public unregisterCommands(tree: RootCommand<CommandProps> | RootCommandGroup): void {
     this.roots.splice(this.roots.indexOf(tree), 1);
     const commands = this.adapter.collectCommands(tree);
     for (const command of commands.values()) {
@@ -98,7 +110,7 @@ export default class CommandService {
     }
   }
 
-  public getCommand(fullName: string): RunnableCommand | undefined {
+  public getCommand(fullName: string): RunnableCommand<CommandProps> | undefined {
     return this.registry.getCommand(fullName);
   }
 

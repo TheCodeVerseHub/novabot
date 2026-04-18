@@ -1,7 +1,7 @@
 import type EventListener from "./listener.ts";
-import type { RootCommand, RootCommandGroup } from "./commands/tree";
+import type { CommandProps, RootCommand, RootCommandGroup } from "./commands/tree";
 
-type ModuleCommand = RootCommand | RootCommandGroup;
+type ModuleCommand = RootCommand<CommandProps> | RootCommandGroup;
 
 /**
  * A container for instances of commands and event listeners.

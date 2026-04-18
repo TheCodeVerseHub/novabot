@@ -1,21 +1,20 @@
-import { OptionType } from "../../../core/commands/arguments";
+import { ResolveOptions, OptionBuilder } from "../../../core/commands/arguments";
 import { RootCommand } from "../../../core/commands/tree";
 import { ChatInputCommandInteraction } from "discord.js";
 
-export default class PingCommand extends RootCommand {
-  public constructor() {
-    super("ping", "Replies with Pong!");
+const props = new OptionBuilder()
+  .string("message", "Message to reply with", { default: "Pong!" })
+  .build();
 
-    this.addOption("message", "Message to reply with", OptionType.String, false, "Pong!");
+export default class PingCommand extends RootCommand<typeof props> {
+  constructor() {
+    super("ping", "Replies with Pong!", props);
   }
 
-  public async execute(
-    interaction: ChatInputCommandInteraction,
-    options: { message: string }
-  ): Promise<void> {
+  async execute(interaction: ChatInputCommandInteraction, options: ResolveOptions<typeof props>) {
     await interaction.reply({
-      content: options.message,
-      ephemeral: true
+      content: `${options.message}\n${options.number}`,
+      ephemeral: true,
     });
   }
 }
