@@ -32,7 +32,7 @@ export default abstract class Feature {
     this.name = name;
     this.description = description;
     this.botClient = botClient;
-    this.module = module??new Module();
+    this.module = module ?? new Module();
   }
 
   public getBotClient(): BotClient {

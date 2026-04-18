@@ -9,7 +9,7 @@ export default class FeatureLoader {
     return fs.readdirSync(this.modulesPath).reduce((map, filename) => {
       const modulePath = path.join(this.modulesPath, filename);
       const m = require(modulePath);
-      const feature = m.default??m;
+      const feature = m.default ?? m;
       // If the module is a feature, otherwise it's ignored
       if (Feature.prototype.isPrototypeOf(feature.prototype)) {
         map.set(filename, feature);

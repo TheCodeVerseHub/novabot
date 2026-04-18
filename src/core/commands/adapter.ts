@@ -40,7 +40,8 @@ export default class CommandTreeAdapter {
     return {
       getFullName: () => name,
       getOptions: () => command.getOptions(),
-      execute: (interaction: ChatInputCommandInteraction, options: Record<string, any>) => command.execute(interaction, options),
+      execute: (interaction: ChatInputCommandInteraction, options: Record<string, any>) =>
+        command.execute(interaction, options),
     };
   }
 }

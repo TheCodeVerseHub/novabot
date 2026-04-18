@@ -11,10 +11,12 @@ export default new FeatureBuilder()
   .addListener(
     () =>
       // Instantiation of a listener with the injection of an inline service exposing a doSomething method
-      new AdvancedListener(new class {
-        public doSomething(): string {
-          return "Hello world!";
-        }
-      }())
+      new AdvancedListener(
+        new (class {
+          public doSomething(): string {
+            return "Hello world!";
+          }
+        })()
+      )
   )
   .build();
