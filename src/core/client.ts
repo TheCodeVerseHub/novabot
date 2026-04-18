@@ -26,7 +26,7 @@ export default class BotClient {
     // TODO: Logger
     console.log("Available features:", this.availableFeatures.keys().toArray().join(", "));
 
-    this.client.on(Events.InteractionCreate, this.commandService.getHandler().listener);
+    this.client.on(Events.InteractionCreate, async (interaction) => await this.commandService.getHandler().listener(interaction));
   }
 
   public start(): void {
