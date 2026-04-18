@@ -2,7 +2,8 @@
   "name": "novabot",
   "version": "1.0.0",
   "description": "Modular Discord bot built with Discord.js, Pino, and Drizzle ORM",
-  "main": "dist/index.js",
+  "main": "index.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
