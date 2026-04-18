@@ -2,7 +2,6 @@ import path from "node:path";
 import fs from "node:fs";
 import Feature from "./feature";
 
-
 export default class FeatureLoader {
   private readonly modulesPath = path.join(__dirname, "../modules");
 

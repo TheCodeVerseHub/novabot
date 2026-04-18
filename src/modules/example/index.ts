@@ -11,6 +11,6 @@ export default new FeatureBuilder()
       // Instantiation of a listener with the injection of an inline service exposing a doSomething method
       new AdvancedListener({
         doSomething: () => "Hello world",
-      }),
+      })
   )
   .build();
