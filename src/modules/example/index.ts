@@ -1,4 +1,4 @@
-import Feature from "@/core/feature";
+import Feature from "../../core/feature";
 import SimpleListener from "./listeners/ready.listener";
 import AdvancedListener from "./listeners/advanced.listener";
 
