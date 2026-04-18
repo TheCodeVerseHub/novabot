@@ -3,8 +3,7 @@ import FeatureLoader from "./loader";
 import config, { Config as ConfigurationType } from "./config";
 import type Feature from "./feature";
 import CommandService from "./commands/service";
-
-type FeatureConstructor = new () => Feature;
+import { type FeatureConstructor } from "./feature";
 
 type FeatureModule = ReturnType<Feature["getModule"]>;
 
@@ -74,7 +73,7 @@ export default class BotClient {
         throw new Error(`Autoload feature "${name}" not found`);
       }
 
-      const feature = new FeatureCtor();
+      const feature = new FeatureCtor(this);
       const module = feature.getModule();
 
       this.registerListeners(module.getListeners());

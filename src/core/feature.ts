@@ -1,5 +1,6 @@
 import Module from "./module";
 import type EventListener from "./listener";
+import type BotClient from "./client";
 
 /**
  * A feature is a class responsible for initializing a Module.
@@ -22,14 +23,20 @@ import type EventListener from "./listener";
  * @see {@link Module}
  */
 export default abstract class Feature {
+  private readonly botClient: BotClient;
   private readonly name: string;
   private readonly description: string;
   private readonly module: Module;
 
-  public constructor(name: string, description: string, module?: Module) {
+  public constructor(name: string, description: string, botClient: BotClient, module?: Module) {
     this.name = name;
     this.description = description;
+    this.botClient = botClient;
     this.module = module??new Module();
+  }
+
+  public getBotClient(): BotClient {
+    return this.botClient;
   }
 
   public getModule(): Module {
@@ -125,7 +132,7 @@ export class FeatureBuilder {
     return this;
   }
 
-  public build(): new () => Feature {
+  public build(): FeatureConstructor {
     if (this.name === null || this.description === null) {
       throw new Error("Name and description must be set before building the feature");
     }
@@ -134,8 +141,8 @@ export class FeatureBuilder {
     const listenerProviders = this.listenerProviders;
     const commandProviders = this.commandProviders;
     return class extends Feature {
-      public constructor() {
-        super(name, description);
+      public constructor(botClient: BotClient) {
+        super(name, description, botClient);
         const module = this.getModule();
         listenerProviders.forEach((provider) => module.addListener(provider()));
         commandProviders.forEach((provider) => module.addCommand(provider()));
@@ -143,3 +150,5 @@ export class FeatureBuilder {
     };
   }
 }
+
+export type FeatureConstructor = new (botClient: BotClient) => Feature;
