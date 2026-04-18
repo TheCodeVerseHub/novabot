@@ -5,8 +5,10 @@
   "main": "dist/index.ts",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx watch src/index.ts",
+    "start": "node dist/scripts/start.js",
+    "sync": "node dist/scripts/deploy-commands.js",
+    "dev": "tsx watch src/scripts/start.ts",
+    "dev:sync": "tsx src/scripts/deploy-commands.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
