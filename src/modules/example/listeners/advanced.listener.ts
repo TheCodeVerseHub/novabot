@@ -4,7 +4,7 @@ import EventListener from "../../../core/listener";
 export default class AdvancedListener extends EventListener<[Client]> {
   private readonly someService: any;
 
-  constructor(someService: any) {
+  public constructor(someService: any) {
     super(Events.ClientReady);
     this.someService = someService;
   }

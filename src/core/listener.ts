@@ -21,7 +21,7 @@ import { Events } from "discord.js";
 export default abstract class EventListener<TArgs extends any[]> {
   private readonly event: Events;
 
-  constructor(event: Events) {
+  public constructor(event: Events) {
     this.event = event;
   }
 
@@ -66,7 +66,7 @@ export function listener<TArgs extends any[]>(
   listener: (...args: TArgs) => Promise<void>
 ): new () => EventListener<TArgs> {
   return class extends EventListener<TArgs> {
-    constructor() {
+    public constructor() {
       super(eventType);
     }
 

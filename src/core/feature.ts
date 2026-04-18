@@ -26,10 +26,10 @@ export default abstract class Feature {
   private readonly description: string;
   private readonly module: Module;
 
-  constructor(name: string, description: string, module: Module | undefined = undefined) {
+  public constructor(name: string, description: string, module?: Module) {
     this.name = name;
     this.description = description;
-    this.module = module || new Module();
+    this.module = module??new Module();
   }
 
   public getModule(): Module {
@@ -98,7 +98,7 @@ export class FeatureBuilder {
   private listenerProviders: (() => EventListener<any[]>)[];
   private commandProviders: (() => any)[];
 
-  constructor() {
+  public constructor() {
     this.name = null;
     this.description = null;
     this.listenerProviders = [];
@@ -134,7 +134,7 @@ export class FeatureBuilder {
     const listenerProviders = this.listenerProviders;
     const commandProviders = this.commandProviders;
     return class extends Feature {
-      constructor() {
+      public constructor() {
         super(name, description);
         const module = this.getModule();
         listenerProviders.forEach((provider) => module.addListener(provider()));

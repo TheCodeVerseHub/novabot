@@ -1,4 +1,7 @@
 import type EventListener from "./listener.ts";
+import type { RootCommand, RootCommandGroup } from "./commands/tree";
+
+type ModuleCommand = RootCommand | RootCommandGroup;
 
 /**
  * A container for instances of commands and event listeners.
@@ -15,25 +18,23 @@ import type EventListener from "./listener.ts";
  */
 export default class Module {
   // TODO: Command system integration
-  private readonly commands: any[];
+  private readonly commands: ModuleCommand[];
   private readonly listeners: EventListener<any[]>[];
 
-  constructor() {
+  public constructor() {
     this.commands = [];
     this.listeners = [];
   }
 
-  // TODO: Command system integration
-  public getCommands(): any[] {
-    return this.commands;
+  public getCommands(): readonly ModuleCommand[] {
+    return this.commands as readonly ModuleCommand[];
   }
 
-  public getListeners(): EventListener<any[]>[] {
-    return this.listeners;
+  public getListeners(): readonly EventListener<any[]>[] {
+    return this.listeners as readonly EventListener<any[]>[];
   }
 
-  // TODO: Command system integration
-  public addCommand(command: any): void {
+  public addCommand(command: ModuleCommand): void {
     this.commands.push(command);
   }
 
