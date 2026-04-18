@@ -53,7 +53,7 @@ export default class BotClient {
 
   private registerListeners(listeners: FeatureListeners): void {
     for (const listener of listeners) {
-      this.client.on(listener.getEvent() as keyof ClientEvents, listener.listener);
+      this.client.on(listener.getEvent() as keyof ClientEvents, async (...args) => await listener.listener(...args));
     }
   }
 
